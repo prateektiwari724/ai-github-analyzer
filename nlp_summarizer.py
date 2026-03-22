@@ -1,90 +1,53 @@
-def detect_tech_stack(readme, language):
+import re
 
-    stack = set()
-    text = readme.lower()
+def clean_readme(text):
+    if not text:
+        return ""
 
-    # Tech keywords
-    mapping = {
-        "react": "React",
-        "vue": "Vue",
-        "angular": "Angular",
-        "node": "Node.js",
-        "express": "Express",
-        "django": "Django",
-        "flask": "Flask",
-        "fastapi": "FastAPI",
-        "spring": "Spring",
-        "tensorflow": "TensorFlow",
-        "pytorch": "PyTorch",
-        "flutter": "Flutter",
-        "vscode": "VS Code Extension",
-    }
+    # Remove code blocks
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
 
-    for key, value in mapping.items():
-        if key in text:
-            stack.add(value)
+    # Remove markdown links/images
+    text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
+    text = re.sub(r'\[.*?\]\(.*?\)', '', text)
 
-    # Language fallback
-    if language:
-        stack.add(language)
+    # Remove HTML tags
+    text = re.sub(r'<.*?>', '', text)
 
-    return list(stack)
+    # Remove special junk
+    text = re.sub(r'[#>*_`]', '', text)
+
+    # Remove file extensions & configs
+    text = re.sub(r'\S+\.(png|jpg|svg|json|md)', '', text)
+
+    # Clean spaces
+    text = re.sub(r'\s+', ' ', text)
+
+    return text.strip()
 
 
-def detect_project_type(readme):
+def summarize_text(text):
+    if not text:
+        return "No description available."
 
-    text = readme.lower()
+    sentences = text.split('.')
 
-    if "extension" in text and "vscode" in text:
-        return "Developer Tool"
+    clean_sentences = []
 
-    if "flutter" in text or "mobile app" in text:
-        return "Mobile App"
+    for s in sentences:
+        s = s.strip()
 
-    if "website" in text or "documentation" in text or "docs" in text:
-        return "Web Platform"
+        # ❌ Remove garbage sentences
+        if len(s) < 40:
+            continue
+        if any(x in s.lower() for x in ["install", "clone", "npm", "pip", "config", "json"]):
+            continue
 
-    if "api" in text or "backend" in text:
-        return "Backend API"
+        clean_sentences.append(s)
 
-    if "machine learning" in text or "artificial intelligence" in text:
-        return "AI System"
+    if not clean_sentences:
+        clean_sentences = sentences[:6]
 
-    return "Software Project"
+    summary = ". ".join(clean_sentences[:5])
 
-
-def detect_architecture(project_type):
-
-    mapping = {
-        "Mobile App": "Mobile Architecture",
-        "Web Platform": "Frontend Web Architecture",
-        "Backend API": "Backend / API Architecture",
-        "AI System": "ML / AI Architecture",
-        "Developer Tool": "Tooling / Extension Architecture",
-        "Software Project": "General Architecture"
-    }
-
-    return mapping.get(project_type, "General Architecture")
-
-
-def generate_summary(repo, project_type, language, tech_stack, readme):
-
-    tech = ", ".join(tech_stack)
-
-    # Extract first meaningful line from README
-    lines = readme.split("\n")
-    description = ""
-
-    for line in lines:
-        if len(line.strip()) > 30:
-            description = line.strip()
-            break
-
-    return f"""{repo} is a {project_type} developed using {language}.
-
-{description}
-
-Tech Stack: {tech}
-
-This project is designed to solve practical problems and enhance developer productivity.
-"""
+    return summary.strip() + "."

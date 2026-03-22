@@ -1,46 +1,38 @@
 import requests
 
-BASE_URL = "https://api.github.com/repos"
+def get_repo_data(url):
+    try:
+        parts = url.rstrip("/").split("/")
+        owner = parts[-2]
+        repo = parts[-1]
 
+        api_url = f"https://api.github.com/repos/{owner}/{repo}"
+        res = requests.get(api_url).json()
 
-def get_repo_data(owner, repo):
-    url = f"{BASE_URL}/{owner}/{repo}"
-    res = requests.get(url)
+        return {
+            "stars": res.get("stargazers_count", 0),
+            "watchers": res.get("watchers_count", 0),
+            "issues": res.get("open_issues_count", 0),
+            "language": res.get("language", "N/A"),
+            "forks": res.get("forks_count", 0),
+            "size": f"{round(res.get('size', 0)/1024,2)} MB"
+        }
 
-    if res.status_code != 200:
-        return None
+    except:
+        return {}
 
-    data = res.json()
+def get_readme(url):
+    try:
+        parts = url.rstrip("/").split("/")
+        owner = parts[-2]
+        repo = parts[-1]
 
-    return {
-        "stars": data.get("stargazers_count"),
-        "forks": data.get("forks_count"),
-        "watchers": data.get("watchers_count"),
-        "open_issues": data.get("open_issues_count"),
-        "language": data.get("language"),
-        "license": data.get("license", {}).get("name") if data.get("license") else "None",
-        "last_updated": data.get("updated_at"),
-        "size": data.get("size"),
-    }
+        api_url = f"https://raw.githubusercontent.com/{owner}/{repo}/main/README.md"
+        res = requests.get(api_url)
 
+        if res.status_code == 200:
+            return res.text
+        return ""
 
-def get_readme(owner, repo):
-    url = f"{BASE_URL}/{owner}/{repo}/readme"
-    headers = {"Accept": "application/vnd.github.v3.raw"}
-
-    res = requests.get(url, headers=headers)
-
-    if res.status_code == 200:
-        return res.text
-
-    return ""
-
-
-def get_contributors(owner, repo):
-    url = f"{BASE_URL}/{owner}/{repo}/contributors"
-    res = requests.get(url)
-
-    if res.status_code != 200:
-        return 0
-
-    return len(res.json())
+    except:
+        return ""
