@@ -17,48 +17,79 @@ def clean_text(text):
 
 
 def summarize_text(text):
+    if not text or len(text.strip()) == 0:
+        return generate_default_summary()
+
     text = clean_text(text)
 
+    # Split sentences
     sentences = re.split(r'(?<=[.!?]) +', text)
 
+    # Light filtering (NOT aggressive)
     clean_sentences = []
-
     for s in sentences:
         s = s.strip()
 
-        # Remove garbage lines
-        if len(s) < 40:
+        if len(s) < 25:
             continue
 
-        if any(x in s.lower() for x in [
-            "install", "clone", "npm", "pip", "config",
-            "json", "license", "copyright"
-        ]):
+        # Only remove extreme garbage
+        if any(x in s.lower() for x in ["license", "copyright"]):
             continue
 
         clean_sentences.append(s)
 
-    # Fallback if too much removed
+    # 🔥 FALLBACK SYSTEM (IMPORTANT FIX)
     if len(clean_sentences) < 3:
-        clean_sentences = sentences[:6]
+        clean_sentences = sentences[:8]
+
+    if len(clean_sentences) == 0:
+        return generate_default_summary()
 
     # Pick top sentences
     selected = clean_sentences[:6]
 
-    # 🧠 STRUCTURED OUTPUT
+    return format_summary(selected)
+
+
+def format_summary(sentences):
+    # Safe extraction
+    s0 = sentences[0] if len(sentences) > 0 else ""
+    s1 = sentences[1] if len(sentences) > 1 else ""
+    s2 = sentences[2] if len(sentences) > 2 else ""
+    s3 = sentences[3] if len(sentences) > 3 else ""
+    s4 = sentences[4] if len(sentences) > 4 else ""
+
     summary = f"""
 Overview:
-{selected[0] if len(selected) > 0 else ""}
+{s0}
 
 Key Features:
-- {selected[1] if len(selected) > 1 else ""}
-- {selected[2] if len(selected) > 2 else ""}
+- {s1}
+- {s2}
 
 Purpose:
-{selected[3] if len(selected) > 3 else ""}
+{s3}
 
 Additional Info:
-{selected[4] if len(selected) > 4 else ""}
+{s4}
 """
 
     return summary.strip()
+
+
+def generate_default_summary():
+    return """
+Overview:
+This repository contains a software project hosted on GitHub.
+
+Key Features:
+- Provides core functionality based on its implementation.
+- Designed to solve a specific problem or use case.
+
+Purpose:
+The project demonstrates development practices and technical implementation.
+
+Additional Info:
+Refer to the repository documentation for more details.
+""".strip()
