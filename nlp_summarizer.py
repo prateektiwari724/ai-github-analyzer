@@ -1,95 +1,81 @@
 import re
 
-def clean_text(text):
-    # Remove code blocks
+def clean_readme(text):
+    # Remove images, links, HTML, code blocks
     text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
-
-    # Remove URLs
-    text = re.sub(r'http\S+|www\S+', '', text)
-
-    # Remove markdown symbols
+    text = re.sub(r'<.*?>', '', text)
+    text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
+    text = re.sub(r'\[.*?\]\(.*?\)', '', text)
     text = re.sub(r'[#>*`]', '', text)
-
-    # Remove extra spaces
-    text = re.sub(r'\s+', ' ', text)
 
     return text.strip()
 
 
-def summarize_text(text):
-    if not text or len(text.strip()) == 0:
-        return generate_default_summary()
+def extract_sections(text):
+    lines = text.split("\n")
 
-    text = clean_text(text)
+    overview = []
+    features = []
+    usage = []
 
-    # Split sentences
-    sentences = re.split(r'(?<=[.!?]) +', text)
+    current_section = "overview"
 
-    # Light filtering (NOT aggressive)
-    clean_sentences = []
-    for s in sentences:
-        s = s.strip()
+    for line in lines:
+        l = line.lower()
 
-        if len(s) < 25:
+        if "feature" in l:
+            current_section = "features"
+            continue
+        elif "usage" in l or "how to" in l:
+            current_section = "usage"
             continue
 
-        # Only remove extreme garbage
-        if any(x in s.lower() for x in ["license", "copyright"]):
+        if len(line.strip()) < 20:
             continue
 
-        clean_sentences.append(s)
+        if current_section == "overview":
+            overview.append(line.strip())
+        elif current_section == "features":
+            features.append(line.strip())
+        elif current_section == "usage":
+            usage.append(line.strip())
 
-    # 🔥 FALLBACK SYSTEM (IMPORTANT FIX)
-    if len(clean_sentences) < 3:
-        clean_sentences = sentences[:8]
-
-    if len(clean_sentences) == 0:
-        return generate_default_summary()
-
-    # Pick top sentences
-    selected = clean_sentences[:6]
-
-    return format_summary(selected)
+    return overview, features, usage
 
 
-def format_summary(sentences):
-    # Safe extraction
-    s0 = sentences[0] if len(sentences) > 0 else ""
-    s1 = sentences[1] if len(sentences) > 1 else ""
-    s2 = sentences[2] if len(sentences) > 2 else ""
-    s3 = sentences[3] if len(sentences) > 3 else ""
-    s4 = sentences[4] if len(sentences) > 4 else ""
+def summarize_text(readme):
+    if not readme or len(readme) < 50:
+        return {
+            "overview": "This repository does not contain enough documentation.",
+            "features": ["Not enough data available"],
+            "purpose": "Unknown",
+            "additional": "No additional information found"
+        }
 
-    summary = f"""
-Overview:
-{s0}
+    clean_text = clean_readme(readme)
 
-Key Features:
-- {s1}
-- {s2}
+    overview, features, usage = extract_sections(clean_text)
 
-Purpose:
-{s3}
+    # ---------- OVERVIEW ----------
+    overview_text = " ".join(overview[:3])
+    if not overview_text:
+        overview_text = clean_text[:200]
 
-Additional Info:
-{s4}
-"""
+    # ---------- FEATURES ----------
+    if not features:
+        features = re.split(r'\.', clean_text)[2:6]
 
-    return summary.strip()
+    features = [f.strip() for f in features if len(f.strip()) > 20][:5]
 
+    # ---------- PURPOSE ----------
+    purpose = overview[1] if len(overview) > 1 else "This project provides useful functionality."
 
-def generate_default_summary():
-    return """
-Overview:
-This repository contains a software project hosted on GitHub.
+    # ---------- ADDITIONAL ----------
+    additional = usage[0] if usage else "Refer to the repository for more details."
 
-Key Features:
-- Provides core functionality based on its implementation.
-- Designed to solve a specific problem or use case.
-
-Purpose:
-The project demonstrates development practices and technical implementation.
-
-Additional Info:
-Refer to the repository documentation for more details.
-""".strip()
+    return {
+        "overview": overview_text,
+        "features": features,
+        "purpose": purpose,
+        "additional": additional
+    }
