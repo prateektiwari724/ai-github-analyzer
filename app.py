@@ -1,140 +1,205 @@
 import streamlit as st
 from github_utils import get_repo_data, get_readme
-from nlp_summarizer import clean_readme, summarize_text
+from nlp_summarizer import summarize_text
 import time
 
-st.set_page_config(page_title="GitHub Analyzer", layout="wide")
+# ------------------ PAGE CONFIG ------------------
+st.set_page_config(page_title="AI GitHub Analyzer", layout="wide")
 
-# ---------- CSS ----------
+# ------------------ CUSTOM CSS ------------------
 st.markdown("""
 <style>
+body {
+    background-color: #0f172a;
+}
 
 /* Center Title */
-h1 {
+.title {
     text-align: center;
-    font-size: 42px !important;
+    font-size: 42px;
+    font-weight: bold;
+    color: #e5e7eb;
     margin-bottom: 30px;
 }
 
-/* Input */
-input {
-    transition: all 0.3s ease;
-}
-input:focus {
-    border: 2px solid #6366F1 !important;
-    box-shadow: 0 0 10px rgba(99,102,241,0.5);
+/* Input box */
+.stTextInput>div>div>input {
+    background-color: #1f2937;
+    color: white;
+    border-radius: 10px;
 }
 
 /* Button */
-button {
-    transition: 0.3s;
-}
-button:hover {
-    transform: scale(1.05);
-}
-
-/* Section Title */
-.section-title {
-    font-size: 26px;
-    margin-top: 40px;
-    margin-bottom: 15px;
-    font-weight: 600;
+.stButton>button {
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 20px;
 }
 
-/* Metric Cards */
+/* Cards */
 .metric-card {
-    background: #0f172a;
-    padding: 30px;
-    border-radius: 14px;
+    background-color: #111827;
+    padding: 25px;
+    border-radius: 15px;
     text-align: center;
     transition: 0.3s;
-    border: 1px solid #1e293b;
 }
 
 .metric-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 20px rgba(99,102,241,0.4);
+    transform: scale(1.03);
 }
 
+/* Metric title */
 .metric-title {
     font-size: 16px;
-    color: #94a3b8;
+    color: #9ca3af;
+    margin-bottom: 10px;
 }
 
+/* Metric value */
 .metric-value {
-    font-size: 30px;
-    font-weight: 700;
-    margin-top: 8px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #f9fafb;
 }
 
-/* Summary */
+/* Section headings */
+.section-title {
+    font-size: 26px;
+    font-weight: bold;
+    margin-top: 40px;
+    margin-bottom: 15px;
+    color: #e5e7eb;
+}
+
+/* Summary box */
 .summary-box {
-    background: #0f172a;
-    padding: 25px;
+    background-color: #111827;
+    padding: 20px;
     border-radius: 12px;
-    line-height: 1.8;
-    font-size: 16px;
-    border: 1px solid #1e293b;
+    line-height: 1.7;
+    color: #e5e7eb;
+    font-size: 15px;
 }
 
+/* Loader */
+.loader {
+  border: 6px solid #1f2937;
+  border-top: 6px solid #2563eb;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- TITLE ----------
-st.title("AI GitHub Repository Analyzer")
+# ------------------ TITLE ------------------
+st.markdown('<div class="title">AI GitHub Repository Analyzer</div>', unsafe_allow_html=True)
 
+# ------------------ INPUT ------------------
 repo_url = st.text_input("Enter GitHub Repository URL")
 
-# ---------- BUTTON ----------
 if st.button("Analyze"):
 
-    if repo_url:
+    if not repo_url:
+        st.warning("Please enter a GitHub URL")
+    else:
+        try:
+            # ---------------- LOADING ANIMATION ----------------
+            loader = st.empty()
+            loader.markdown('<div class="loader"></div>', unsafe_allow_html=True)
+            time.sleep(1)
 
-        # 🔥 LOADING ANIMATION
-        with st.spinner("Analyzing repository..."):
-            time.sleep(1)  # smooth UX
-            repo = get_repo_data(repo_url)
+            # ---------------- FETCH DATA ----------------
+            data = get_repo_data(repo_url)
             readme = get_readme(repo_url)
 
-            clean_text = clean_readme(readme)
-            summary = summarize_text(clean_text)
+            summary = summarize_text(readme)
 
-        # ---------- METRICS ----------
-        st.markdown('<div class="section-title">Repository Metrics</div>', unsafe_allow_html=True)
+            loader.empty()
 
-        cols = st.columns(4)
+            # ---------------- METRICS ----------------
+            st.markdown('<div class="section-title">Repository Metrics</div>', unsafe_allow_html=True)
 
-        def card(title, value):
-            return f"""
-            <div class="metric-card">
-                <div class="metric-title">{title}</div>
-                <div class="metric-value">{value}</div>
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">Stars</div>
+                    <div class="metric-value">{data['stars']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">Watchers</div>
+                    <div class="metric-value">{data['watchers']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">Issues</div>
+                    <div class="metric-value">{data['issues']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col4:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">Language</div>
+                    <div class="metric-value">{data['language']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            col5, col6 = st.columns(2)
+
+            with col5:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">Forks</div>
+                    <div class="metric-value">{data['forks']}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col6:
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-title">Size</div>
+                    <div class="metric-value">{data['size']} MB</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # ---------------- ANALYSIS ----------------
+            st.markdown('<div class="section-title">Analysis</div>', unsafe_allow_html=True)
+
+            project_type = "Web Application" if "web" in readme.lower() else "Software Project"
+            architecture = "Modular Architecture" if "api" in readme.lower() else "General Architecture"
+            tech_stack = data["language"]
+
+            st.write(f"Project Type: {project_type}")
+            st.write(f"Architecture: {architecture}")
+            st.write(f"Tech Stack: {tech_stack}")
+
+            # ---------------- SUMMARY ----------------
+            st.markdown('<div class="section-title">Project Summary</div>', unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="summary-box">
+            {summary.replace("\n", "<br>")}
             </div>
-            """
+            """, unsafe_allow_html=True)
 
-        cols[0].markdown(card("Stars", repo.get("stars", 0)), unsafe_allow_html=True)
-        cols[1].markdown(card("Watchers", repo.get("watchers", 0)), unsafe_allow_html=True)
-        cols[2].markdown(card("Issues", repo.get("issues", 0)), unsafe_allow_html=True)
-        cols[3].markdown(card("Language", repo.get("language", "N/A")), unsafe_allow_html=True)
-
-        col5, col6 = st.columns(2)
-        col5.markdown(card("Forks", repo.get("forks", 0)), unsafe_allow_html=True)
-        col6.markdown(card("Size", repo.get("size", "N/A")), unsafe_allow_html=True)
-
-        # ---------- ANALYSIS ----------
-        st.markdown('<div class="section-title">Analysis</div>', unsafe_allow_html=True)
-
-        project_type = "Web Application" if "web" in clean_text.lower() else "Software Project"
-        architecture = "Modular Architecture" if "api" in clean_text.lower() else "General Architecture"
-
-        st.write(f"Project Type: {project_type}")
-        st.write(f"Architecture: {architecture}")
-        st.write(f"Tech Stack: {repo.get('language', 'N/A')}")
-
-        # ---------- SUMMARY ----------
-        st.markdown('<div class="section-title">Project Summary</div>', unsafe_allow_html=True)
-
-        st.markdown(f"<div class='summary-box'>{summary}</div>", unsafe_allow_html=True)
-
-    else:
-        st.warning("Enter a valid GitHub URL")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")

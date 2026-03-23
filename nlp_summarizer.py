@@ -1,53 +1,64 @@
 import re
 
-def clean_readme(text):
-    if not text:
-        return ""
-
+def clean_text(text):
     # Remove code blocks
     text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
 
-    # Remove markdown links/images
-    text = re.sub(r'!\[.*?\]\(.*?\)', '', text)
-    text = re.sub(r'\[.*?\]\(.*?\)', '', text)
+    # Remove URLs
+    text = re.sub(r'http\S+|www\S+', '', text)
 
-    # Remove HTML tags
-    text = re.sub(r'<.*?>', '', text)
+    # Remove markdown symbols
+    text = re.sub(r'[#>*`]', '', text)
 
-    # Remove special junk
-    text = re.sub(r'[#>*_`]', '', text)
-
-    # Remove file extensions & configs
-    text = re.sub(r'\S+\.(png|jpg|svg|json|md)', '', text)
-
-    # Clean spaces
+    # Remove extra spaces
     text = re.sub(r'\s+', ' ', text)
 
     return text.strip()
 
 
 def summarize_text(text):
-    if not text:
-        return "No description available."
+    text = clean_text(text)
 
-    sentences = text.split('.')
+    sentences = re.split(r'(?<=[.!?]) +', text)
 
     clean_sentences = []
 
     for s in sentences:
         s = s.strip()
 
-        # ❌ Remove garbage sentences
+        # Remove garbage lines
         if len(s) < 40:
             continue
-        if any(x in s.lower() for x in ["install", "clone", "npm", "pip", "config", "json"]):
+
+        if any(x in s.lower() for x in [
+            "install", "clone", "npm", "pip", "config",
+            "json", "license", "copyright"
+        ]):
             continue
 
         clean_sentences.append(s)
 
-    if not clean_sentences:
+    # Fallback if too much removed
+    if len(clean_sentences) < 3:
         clean_sentences = sentences[:6]
 
-    summary = ". ".join(clean_sentences[:5])
+    # Pick top sentences
+    selected = clean_sentences[:6]
 
-    return summary.strip() + "."
+    # 🧠 STRUCTURED OUTPUT
+    summary = f"""
+Overview:
+{selected[0] if len(selected) > 0 else ""}
+
+Key Features:
+- {selected[1] if len(selected) > 1 else ""}
+- {selected[2] if len(selected) > 2 else ""}
+
+Purpose:
+{selected[3] if len(selected) > 3 else ""}
+
+Additional Info:
+{selected[4] if len(selected) > 4 else ""}
+"""
+
+    return summary.strip()
