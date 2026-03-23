@@ -19,6 +19,7 @@ st.markdown("""
     padding: 20px;
     border-radius: 10px;
     text-align: center;
+    width: 100%;
 }
 .metric-title { color: #9CA3AF; }
 .metric-value { font-size: 26px; font-weight: bold; }
@@ -88,7 +89,11 @@ if st.button("Analyze"):
                 c3.markdown(f"<div class='metric-card'><div class='metric-title'>Issues</div><div class='metric-value'>{data.get('open_issues_count',0)}</div></div>", unsafe_allow_html=True)
                 c4.markdown(f"<div class='metric-card'><div class='metric-title'>Language</div><div class='metric-value'>{data.get('language','N/A')}</div></div>", unsafe_allow_html=True)
 
-                c5, c6 = st.columns(2)
+                # ✅ FIX: Proper spacing row (prevents overlap)
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                # ✅ FIXED ROW (equal width, no overlap)
+                c5, c6 = st.columns([1, 1])
 
                 c5.markdown(f"<div class='metric-card'><div class='metric-title'>Forks</div><div class='metric-value'>{data.get('forks_count',0)}</div></div>", unsafe_allow_html=True)
                 c6.markdown(f"<div class='metric-card'><div class='metric-title'>Size</div><div class='metric-value'>{round(data.get('size',0)/1024,2)} MB</div></div>", unsafe_allow_html=True)
