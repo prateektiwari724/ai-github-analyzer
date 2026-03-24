@@ -46,7 +46,7 @@ Understanding a GitHub repository often requires manually reading long and unstr
 ##  System Architecture
 
 <p align="center">
-  <img src="assets/system architecture.png" width="800"/>
+  <img src="assets/architecture.png" width="800"/>
 </p>
 
 ---
@@ -76,15 +76,15 @@ Understanding a GitHub repository often requires manually reading long and unstr
 ##  Application Preview
 
 <p align="center">
-  <img src="assets/architecture.png" width="800"/>
-</p>
-
-<p align="center">
-  <img src="assets/pipeline.png" width="800"/>
+  <img src="assets/dashboard.png" width="800"/>
 </p>
 
 <p align="center">
   <img src="assets/ui1.png" width="800"/>
+</p>
+
+<p align="center">
+  <img src="assets/ui2.png" width="800"/>
 </p>
 
 ---
@@ -137,6 +137,6 @@ please click it and wait a few seconds for the app to start.
 
 ## Author
 
-Prateek Tiwari
-B.Tech CSE
+Prateek Tiwari  
+B.Tech CSE  
 AI/ML Enthusiast
