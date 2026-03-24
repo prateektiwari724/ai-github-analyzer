@@ -76,9 +76,15 @@ Understanding a GitHub repository often requires manually reading long and unstr
 ##  Application Preview
 
 <p align="center">
-  <img src="assets/Dashboard.png" width="800"/>
-  <img src="assets/UI1.png" width="800"/>
-  <img src="assets/UI2.png" width="800"/>
+  <img src="assets/architecture.png" width="800"/>
+</p>
+
+<p align="center">
+  <img src="assets/pipeline.png" width="800"/>
+</p>
+
+<p align="center">
+  <img src="assets/ui1.png" width="800"/>
 </p>
 
 ---
