@@ -106,7 +106,7 @@ Understanding a GitHub repository often requires manually reading long and unstr
 
 🔗 **Live App:**  
 
-https://your-streamlit-app-link
+https://ai-app-analyzer-jyun2gcfj7nnwg7i4y5xou.streamlit.app/
 
 ⚠️ **Note:**  
 This application is hosted on the free tier of Streamlit Cloud.  
